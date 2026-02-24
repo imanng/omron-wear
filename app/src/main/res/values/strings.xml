@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">Omron Wear</string>
+    <string name="hello_world">Hello, %1$s!</string>
+
+    <!-- Scan screen -->
+    <string name="scan_title">OMRON sensor</string>
+    <string name="scanning">Scanning…</string>
+    <string name="no_devices">No devices found</string>
+    <string name="tap_to_connect">Tap to connect</string>
+    <string name="permission_required">Bluetooth permission needed</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_title">Sensor data</string>
+    <string name="temp">Temp</string>
+    <string name="rh">RH</string>
+    <string name="luminosity">Luminosity</string>
+    <string name="uv_index">UV Index</string>
+    <string name="pressure">Pressure</string>
+    <string name="noise">Noise</string>
+    <string name="discomfort">Discomfort</string>
+    <string name="heatstroke">Heatstroke</string>
+    <string name="battery">Battery</string>
+    <string name="rssi">RSSI</string>
+    <string name="refresh">Refresh</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="no_data">—</string>
+</resources>
