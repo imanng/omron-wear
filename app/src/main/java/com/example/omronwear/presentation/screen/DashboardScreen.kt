@@ -13,6 +13,7 @@ import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
+import androidx.wear.compose.material3.TextToggleButton
 import androidx.wear.compose.material3.lazy.rememberTransformationSpec
 import androidx.wear.compose.material3.lazy.transformedHeight
 import androidx.wear.compose.material3.SurfaceTransformation
@@ -24,6 +25,8 @@ import com.example.omronwear.ble.OmronBleManager
 fun DashboardScreen(
     bleManager: OmronBleManager,
     contentPadding: androidx.compose.foundation.layout.PaddingValues,
+    memorySyncEnabled: Boolean,
+    onMemorySyncEnabledChange: (Boolean) -> Unit,
     onDisconnect: () -> Unit,
 ) {
     val latestData by bleManager.latestData.collectAsState(initial = null)
@@ -47,12 +50,15 @@ fun DashboardScreen(
                     text = deviceAddress.ifEmpty { stringResource(R.string.dashboard_title) },
                     style = MaterialTheme.typography.titleSmall,
                 )
-                if (rssi != null) {
-                    Text(
-                        text = "${stringResource(R.string.rssi)}: ${rssi} dBm",
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
+            }
+        }
+        if (rssi != null) {
+            item {
+                Text(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = "${stringResource(R.string.rssi)}: ${rssi} dBm",
+                    style = MaterialTheme.typography.bodySmall,
+                )
             }
         }
         item {
@@ -108,6 +114,19 @@ fun DashboardScreen(
                 label = stringResource(R.string.battery),
                 value = latestData?.let { "%.3f V".format(it.batteryVoltageV) } ?: stringResource(R.string.no_data),
             )
+        }
+        item {
+            TextToggleButton(
+                checked = memorySyncEnabled,
+                onCheckedChange = onMemorySyncEnabledChange,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(
+                    text = stringResource(
+                        if (memorySyncEnabled) R.string.memory_sync_on else R.string.memory_sync_off
+                    ),
+                )
+            }
         }
         item {
             Button(

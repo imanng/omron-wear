@@ -13,6 +13,18 @@ object OmronGattConstants {
     /** Latest data — 19 bytes, updated every measurement interval */
     val LATEST_DATA_CHAR_UUID: UUID = UUID.fromString("0C4C3001-7700-46F4-AA96-D5E974E32A54")
 
+    /** Latest page — 9 bytes, progress of data recording (page, row, UNIX time, interval) */
+    val LATEST_PAGE_CHAR_UUID: UUID = UUID.fromString("0C4C3002-7700-46F4-AA96-D5E974E32A54")
+
+    /** Request page — 3 bytes, write page+row to read from flash */
+    val REQUEST_PAGE_CHAR_UUID: UUID = UUID.fromString("0C4C3003-7700-46F4-AA96-D5E974E32A54")
+
+    /** Response flag — 5 bytes, read until Completed before reading Response data */
+    val RESPONSE_FLAG_CHAR_UUID: UUID = UUID.fromString("0C4C3004-7700-46F4-AA96-D5E974E32A54")
+
+    /** Response data — 19 bytes, same format as Latest data for requested page/row */
+    val RESPONSE_DATA_CHAR_UUID: UUID = UUID.fromString("0C4C3005-7700-46F4-AA96-D5E974E32A54")
+
     /** OMRON device name (short) when in connection beacon modes */
     const val DEVICE_NAME_SHORT = "Env"
 

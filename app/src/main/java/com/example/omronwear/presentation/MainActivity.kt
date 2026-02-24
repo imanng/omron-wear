@@ -95,11 +95,14 @@ fun WearApp(
                 )
             }
             connectionState is ConnectionState.Connected -> {
+                val memorySyncEnabled by viewModel.memorySyncEnabled.collectAsState(initial = true)
                 ScreenScaffold(
                     content = { contentPadding ->
                         DashboardScreen(
                             bleManager = viewModel.bleManager,
                             contentPadding = contentPadding,
+                            memorySyncEnabled = memorySyncEnabled,
+                            onMemorySyncEnabledChange = { viewModel.setMemorySyncEnabled(it) },
                             onDisconnect = { viewModel.disconnect() },
                         )
                     },

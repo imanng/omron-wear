@@ -58,6 +58,43 @@ fun heatstrokeToLabel(wbgtC: Double): String = when {
     else -> "Danger"
 }
 
+/** Latest page (0x3002) — 9 bytes: UNIX time, interval, latest page, latest row */
+data class LatestPage(
+    val unixTime: Long,
+    val measurementIntervalSec: Int,
+    val latestPage: Int,
+    val latestRow: Int,
+)
+
+/** Response flag (0x3004) — 5 bytes: update flag (0=Retrieving, 1=Completed, 2=Failed), UNIX time */
+data class ResponseFlag(
+    val updateFlag: Int,
+    val unixTime: Long,
+) {
+    val isCompleted: Boolean get() = updateFlag == 1
+    val isFailed: Boolean get() = updateFlag == 2
+}
+
+fun parseLatestPage(value: ByteArray?): LatestPage? {
+    if (value == null || value.size < 9) return null
+    val buf = ByteBuffer.wrap(value).order(ByteOrder.LITTLE_ENDIAN)
+    return LatestPage(
+        unixTime = buf.int.toLong() and 0xFFFFFFFFL,
+        measurementIntervalSec = buf.short.toInt() and 0xFFFF,
+        latestPage = buf.short.toInt() and 0xFFFF,
+        latestRow = buf.get().toInt() and 0xFF,
+    )
+}
+
+fun parseResponseFlag(value: ByteArray?): ResponseFlag? {
+    if (value == null || value.size < 5) return null
+    val buf = ByteBuffer.wrap(value).order(ByteOrder.LITTLE_ENDIAN)
+    return ResponseFlag(
+        updateFlag = buf.get().toInt() and 0xFF,
+        unixTime = buf.int.toLong() and 0xFFFFFFFFL,
+    )
+}
+
 /**
  * Parses 19-byte Latest data characteristic value (little-endian).
  * @return null if data is invalid (wrong length)

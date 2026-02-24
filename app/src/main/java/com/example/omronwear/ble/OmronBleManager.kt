@@ -13,6 +13,8 @@ import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.content.Context
+import com.example.omronwear.settings.MemorySyncPreference
+import com.example.omronwear.worker.OmronMemorySyncWorker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -109,6 +111,9 @@ class OmronBleManager(private val context: Context) {
             _connectionState.value = ConnectionState.Connected(gatt.device.address, _rssi.value ?: 0)
             readLatestDataCharacteristic(gatt, char)
             startPolling()
+            if (MemorySyncPreference.isEnabled(context)) {
+                OmronMemorySyncWorker.enqueue(context, gatt.device.address)
+            }
         }
 
         override fun onCharacteristicRead(
@@ -243,6 +248,7 @@ class OmronBleManager(private val context: Context) {
         pollingJob = null
         rssiJob?.cancel()
         rssiJob = null
+        OmronMemorySyncWorker.cancel(context)
         try {
             bluetoothGatt?.close()
         } catch (_: Exception) { }

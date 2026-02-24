@@ -24,4 +24,7 @@
     <string name="refresh">Refresh</string>
     <string name="disconnect">Disconnect</string>
     <string name="no_data">—</string>
+    <string name="memory_sync">Memory sync</string>
+    <string name="memory_sync_on">Memory sync: On</string>
+    <string name="memory_sync_off">Memory sync: Off</string>
 </resources>
