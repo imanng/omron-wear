@@ -12,6 +12,7 @@ import com.example.omronwear.ble.OmronBleManager
 import com.example.omronwear.ble.OmronMemorySync
 import com.example.omronwear.settings.MemorySyncPreference
 import com.example.omronwear.settings.OmronMetricsPreference
+import com.example.omronwear.worker.OmronForegroundSyncService
 import com.example.omronwear.worker.OmronMemorySyncWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -75,10 +76,12 @@ class OmronViewModel(application: Application) : AndroidViewModel(application) {
         _memorySyncEnabled.value = enabled
         if (!enabled) {
             OmronMemorySyncWorker.cancel(appContext)
+            OmronForegroundSyncService.stop(appContext)
         } else {
             val state = bleManager.connectionState.value
             if (state is ConnectionState.Connected) {
-                OmronMemorySyncWorker.enqueue(appContext, state.deviceAddress)
+                OmronMemorySyncWorker.cancel(appContext)
+                OmronForegroundSyncService.start(appContext, state.deviceAddress)
             }
         }
         bleManager.updatePollingIntervalFromMemorySyncPreference()

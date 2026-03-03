@@ -34,4 +34,6 @@
     <string name="last_10_records_title">Last 10 records</string>
     <string name="loading_records">Loading records…</string>
     <string name="no_records">No records found</string>
+    <string name="fg_sync_title">OMRON background sync</string>
+    <string name="fg_sync_text">Sync every 3 min: %1$s</string>
 </resources>

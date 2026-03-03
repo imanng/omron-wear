@@ -16,6 +16,7 @@ import android.content.Context
 import android.util.Log
 import com.example.omronwear.settings.MemorySyncPreference
 import com.example.omronwear.settings.OmronMetricsPreference
+import com.example.omronwear.worker.OmronForegroundSyncService
 import com.example.omronwear.worker.OmronMemorySyncWorker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -103,6 +104,7 @@ class OmronBleManager(private val context: Context) {
                     pollingJob = null
                     rssiJob?.cancel()
                     rssiJob = null
+                    OmronForegroundSyncService.stop(context)
                     try { gatt.close() } catch (_: Exception) { }
                     bluetoothGatt = null
                     _connectionState.value = ConnectionState.Disconnected
@@ -140,7 +142,8 @@ class OmronBleManager(private val context: Context) {
                     readLatestDataCharacteristic(gatt, char)
                     startPolling()
                     if (MemorySyncPreference.isEnabled(context)) {
-                        OmronMemorySyncWorker.enqueue(context, gatt.device.address)
+                        OmronMemorySyncWorker.cancel(context)
+                        OmronForegroundSyncService.start(context, gatt.device.address)
                     }
                 }
             }
@@ -315,6 +318,7 @@ class OmronBleManager(private val context: Context) {
         rssiJob?.cancel()
         rssiJob = null
         OmronMemorySyncWorker.cancel(context)
+        OmronForegroundSyncService.stop(context)
         try {
             bluetoothGatt?.close()
         } catch (_: Exception) { }
