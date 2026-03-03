@@ -11,21 +11,37 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 /**
- * One-shot sync: connect to OMRON by address, read last [RECORDS_TO_FETCH] stored
+ * One-shot sync: connect to OMRON by address, read last [recordsToFetch] stored
  * records from flash (Request page / Response data), disconnect.
  * Designed for use from WorkManager (blocking).
  */
 @SuppressLint("MissingPermission")
 object OmronMemorySync {
 
-    private const val RECORDS_TO_FETCH = 10
+    private const val DEFAULT_RECORDS_TO_FETCH = 10
     private const val CONNECT_TIMEOUT_MS = 15_000L
     private const val READ_TIMEOUT_MS = 5_000L
     private const val WRITE_TIMEOUT_MS = 3_000L
     private const val RESPONSE_FLAG_POLL_MS = 100
     private const val RESPONSE_FLAG_MAX_POLLS = 50
 
-    fun sync(context: Context, deviceAddress: String): List<LatestData> {
+    data class HistoricalRecord(
+        val data: LatestData,
+        val timestampEpochSec: Long,
+    )
+
+    fun sync(
+        context: Context,
+        deviceAddress: String,
+        recordsToFetch: Int = DEFAULT_RECORDS_TO_FETCH,
+    ): List<LatestData> = syncWithTime(context, deviceAddress, recordsToFetch).map { it.data }
+
+    fun syncWithTime(
+        context: Context,
+        deviceAddress: String,
+        recordsToFetch: Int = DEFAULT_RECORDS_TO_FETCH,
+    ): List<HistoricalRecord> {
+        if (recordsToFetch <= 0) return emptyList()
         val adapter = (context.getSystemService(Context.BLUETOOTH_SERVICE) as? android.bluetooth.BluetoothManager)?.adapter
             ?: return emptyList()
         if (!adapter.isEnabled) return emptyList()
@@ -88,8 +104,9 @@ object OmronMemorySync {
             val latestPage = readBlocking(latestPageChar)?.let { parseLatestPage(it) } ?: return emptyList()
             var page = latestPage.latestPage
             var row = latestPage.latestRow
-            val results = mutableListOf<LatestData>()
-            var remaining = RECORDS_TO_FETCH
+            val results = mutableListOf<HistoricalRecord>()
+            var remaining = recordsToFetch
+            val intervalSec = latestPage.measurementIntervalSec.toLong().coerceAtLeast(1L)
 
             while (remaining > 0) {
                 val payload = byteArrayOf(
@@ -102,20 +119,26 @@ object OmronMemorySync {
                 if (!gatt!!.writeCharacteristic(requestPageChar)) break
                 if (!writeLatch!!.await(WRITE_TIMEOUT_MS, TimeUnit.MILLISECONDS)) break
 
-                if (!waitResponseFlagCompleted(::readBlocking, responseFlagChar)) break
+                val responseFlag = waitResponseFlagCompleted(::readBlocking, responseFlagChar) ?: break
+                val pageBaseUnixSec = responseFlag.unixTime
                 val rowsInThisPage = row + 1
                 val toRead = minOf(remaining, rowsInThisPage)
                 repeat(toRead) {
-                    readBlocking(responseDataChar)?.let { parseLatestData(it) }?.let { results.add(it) }
+                    readBlocking(responseDataChar)
+                        ?.let { parseLatestData(it) }
+                        ?.let { data ->
+                            val timestampSec = (pageBaseUnixSec + data.rowNumber.toLong() * intervalSec).coerceAtLeast(0L)
+                            results.add(HistoricalRecord(data = data, timestampEpochSec = timestampSec))
+                        }
                 }
                 remaining -= toRead
                 if (remaining <= 0) break
-                if (rowsInThisPage >= toRead) {
-                    row -= toRead
-                } else {
+                if (toRead == rowsInThisPage) {
                     page -= 1
                     if (page < 0) break
                     row = 12
+                } else {
+                    row -= toRead
                 }
             }
 
@@ -130,14 +153,14 @@ object OmronMemorySync {
     private fun waitResponseFlagCompleted(
         readBlocking: (BluetoothGattCharacteristic) -> ByteArray?,
         responseFlagChar: BluetoothGattCharacteristic,
-    ): Boolean {
+    ): ResponseFlag? {
         repeat(RESPONSE_FLAG_MAX_POLLS) {
-            val value = readBlocking(responseFlagChar) ?: return false
-            val flag = parseResponseFlag(value) ?: return false
-            if (flag.isCompleted) return true
-            if (flag.isFailed) return false
+            val value = readBlocking(responseFlagChar) ?: return null
+            val flag = parseResponseFlag(value) ?: return null
+            if (flag.isCompleted) return flag
+            if (flag.isFailed) return null
             Thread.sleep(RESPONSE_FLAG_POLL_MS.toLong())
         }
-        return false
+        return null
     }
 }

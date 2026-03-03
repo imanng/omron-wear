@@ -18,8 +18,10 @@ import androidx.wear.compose.material3.lazy.rememberTransformationSpec
 import androidx.wear.compose.material3.lazy.transformedHeight
 import androidx.wear.compose.material3.SurfaceTransformation
 import com.example.omronwear.R
-import com.example.omronwear.ble.LatestData
 import com.example.omronwear.ble.OmronBleManager
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun DashboardScreen(
@@ -27,9 +29,11 @@ fun DashboardScreen(
     contentPadding: androidx.compose.foundation.layout.PaddingValues,
     memorySyncEnabled: Boolean,
     onMemorySyncEnabledChange: (Boolean) -> Unit,
+    onOpenLast10Records: () -> Unit,
     onDisconnect: () -> Unit,
 ) {
     val latestData by bleManager.latestData.collectAsState(initial = null)
+    val lastDataUpdateTimeMs by bleManager.lastDataUpdateTimeMs.collectAsState(initial = null)
     val rssi by bleManager.rssi.collectAsState(initial = null)
     val connectionState by bleManager.connectionState.collectAsState(initial = com.example.omronwear.ble.ConnectionState.Disconnected)
     val deviceAddress = (connectionState as? com.example.omronwear.ble.ConnectionState.Connected)?.deviceAddress ?: ""
@@ -49,6 +53,18 @@ fun DashboardScreen(
                 Text(
                     text = deviceAddress.ifEmpty { stringResource(R.string.dashboard_title) },
                     style = MaterialTheme.typography.titleSmall,
+                )
+            }
+        }
+        if (lastDataUpdateTimeMs != null) {
+            item {
+                val timeMs = lastDataUpdateTimeMs!!
+                val timeStr = DateTimeFormatter.ofPattern("HH:mm")
+                    .format(Instant.ofEpochMilli(timeMs).atZone(ZoneId.systemDefault()))
+                Text(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = "${stringResource(R.string.last_update)}: $timeStr",
+                    style = MaterialTheme.typography.bodySmall,
                 )
             }
         }
@@ -138,6 +154,18 @@ fun DashboardScreen(
                 ),
             ) {
                 Text(stringResource(R.string.refresh))
+            }
+        }
+        item {
+            Button(
+                onClick = onOpenLast10Records,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                ),
+            ) {
+                Text(stringResource(R.string.last_10_records_button))
             }
         }
         item {

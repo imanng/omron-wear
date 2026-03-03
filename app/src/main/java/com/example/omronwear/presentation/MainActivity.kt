@@ -13,6 +13,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -28,6 +31,7 @@ import com.example.omronwear.OmronWearApp
 import com.example.omronwear.R
 import com.example.omronwear.ble.ConnectionState
 import com.example.omronwear.presentation.screen.DashboardScreen
+import com.example.omronwear.presentation.screen.Last10RecordsScreen
 import com.example.omronwear.presentation.screen.ScanScreen
 import com.example.omronwear.presentation.theme.OmronWearTheme
 
@@ -96,15 +100,33 @@ fun WearApp(
             }
             connectionState is ConnectionState.Connected -> {
                 val memorySyncEnabled by viewModel.memorySyncEnabled.collectAsState(initial = true)
+                val last10Records by viewModel.last10Records.collectAsState(initial = emptyList())
+                val last10Loading by viewModel.last10Loading.collectAsState(initial = false)
+                val last10Error by viewModel.last10Error.collectAsState(initial = null)
+                var showLast10Screen by rememberSaveable { mutableStateOf(false) }
                 ScreenScaffold(
                     content = { contentPadding ->
-                        DashboardScreen(
-                            bleManager = viewModel.bleManager,
-                            contentPadding = contentPadding,
-                            memorySyncEnabled = memorySyncEnabled,
-                            onMemorySyncEnabledChange = { viewModel.setMemorySyncEnabled(it) },
-                            onDisconnect = { viewModel.disconnect() },
-                        )
+                        if (showLast10Screen) {
+                            Last10RecordsScreen(
+                                contentPadding = contentPadding,
+                                records = last10Records,
+                                loading = last10Loading,
+                                errorMessage = last10Error,
+                                onRefresh = { viewModel.fetchLast10Records() },
+                                onBack = { showLast10Screen = false },
+                            )
+                        } else {
+                            DashboardScreen(
+                                bleManager = viewModel.bleManager,
+                                contentPadding = contentPadding,
+                                memorySyncEnabled = memorySyncEnabled,
+                                onMemorySyncEnabledChange = { viewModel.setMemorySyncEnabled(it) },
+                                onOpenLast10Records = {
+                                    showLast10Screen = true
+                                },
+                                onDisconnect = { viewModel.disconnect() },
+                            )
+                        }
                     },
                 )
             }

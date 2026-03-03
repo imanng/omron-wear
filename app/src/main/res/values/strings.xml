@@ -21,10 +21,17 @@
     <string name="heatstroke">Heatstroke</string>
     <string name="battery">Battery</string>
     <string name="rssi">RSSI</string>
+    <string name="last_update">Last update</string>
     <string name="refresh">Refresh</string>
     <string name="disconnect">Disconnect</string>
+    <string name="back">Back</string>
     <string name="no_data">—</string>
     <string name="memory_sync">Memory sync</string>
     <string name="memory_sync_on">Memory sync: On</string>
     <string name="memory_sync_off">Memory sync: Off</string>
+    <string name="memory_sync_no_records">No records yet (syncs every 3 min)</string>
+    <string name="last_10_records_button">Last 10 records</string>
+    <string name="last_10_records_title">Last 10 records</string>
+    <string name="loading_records">Loading records…</string>
+    <string name="no_records">No records found</string>
 </resources>

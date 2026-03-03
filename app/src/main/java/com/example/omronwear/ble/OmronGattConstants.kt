@@ -25,6 +25,18 @@ object OmronGattConstants {
     /** Response data — 19 bytes, same format as Latest data for requested page/row */
     val RESPONSE_DATA_CHAR_UUID: UUID = UUID.fromString("0C4C3005-7700-46F4-AA96-D5E974E32A54")
 
+    /** Setting Service — measurement interval and event thresholds */
+    val SETTING_SERVICE_UUID: UUID = UUID.fromString("0C4C3010-7700-46F4-AA96-D5E974E32A54")
+
+    /** Measurement interval — 2 bytes (UInt16 sec), range 1..3600 */
+    val MEASUREMENT_INTERVAL_CHAR_UUID: UUID = UUID.fromString("0C4C3011-7700-46F4-AA96-D5E974E32A54")
+
+    /** Control Service — time/trigger/error */
+    val CONTROL_SERVICE_UUID: UUID = UUID.fromString("0C4C3030-7700-46F4-AA96-D5E974E32A54")
+
+    /** Time information — 4 bytes (UInt32 UNIX time sec) */
+    val TIME_INFORMATION_CHAR_UUID: UUID = UUID.fromString("0C4C3031-7700-46F4-AA96-D5E974E32A54")
+
     /** OMRON device name (short) when in connection beacon modes */
     const val DEVICE_NAME_SHORT = "Env"
 
